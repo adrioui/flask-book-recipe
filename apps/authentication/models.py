@@ -5,18 +5,19 @@ Copyright (c) 2019 - present AppSeed.us
 
 from flask_login import UserMixin
 
-from apps import db, login_manager
+from apps import db
 
-from apps.authentication.util import hash_pass
 
 class Users(db.Model, UserMixin):
 
-    __tablename__ = 'Users'
+    __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
     email = db.Column(db.String(64), unique=True)
-    password = db.Column(db.LargeBinary)
+    social_provider = db.Column(db.String(64))
+    social_id = db.Column(db.String)
+    image_url = db.Column(db.Text)
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -27,22 +28,19 @@ class Users(db.Model, UserMixin):
                 # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
                 value = value[0]
 
-            if property == 'password':
-                value = hash_pass(value)  # we need bytes here (not plain str)
-
             setattr(self, property, value)
 
     def __repr__(self):
         return str(self.username)
 
 
-@login_manager.user_loader
-def user_loader(id):
-    return Users.query.filter_by(id=id).first()
+# @login_manager.user_loader
+# def user_loader(id):
+#     return Users.query.filter_by(id=id).first()
 
 
-@login_manager.request_loader
-def request_loader(request):
-    username = request.form.get('username')
-    user = Users.query.filter_by(username=username).first()
-    return user if user else None
+# @login_manager.request_loader
+# def request_loader(request):
+#     username = request.form.get('username')
+#     user = Users.query.filter_by(username=username).first()
+#     return user if user else None

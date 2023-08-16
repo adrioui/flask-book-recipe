@@ -1,0 +1,33 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Recipes {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+  {% include "includes/navigation-light.html" %}
+
+  <section class="py-3 pt-4">
+    {% include "recipe/create_recipe.html" %}
+    <div class="container">
+      <div class="row justify-content-center">
+        {% for recipe in recipes %}
+          <div class="col-lg-4 col-md-6 col-sm-12">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="card-title">{{ recipe['title'] }}</h5>
+                <p class="card-text">{{ recipe['description'] }}</p>
+                <div class="card-body px-0">
+                  <p>Likes: {{ recipe['like_count'] }}</p>
+                  <p>Comments: {{ recipe['comment_count'] }}</p>
+                </div>  
+                <a href="{{ url_for('recipe_blueprint.get_recipe', id=recipe['id']) }}" class="card-link">View Recipe</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock content %}

@@ -1,0 +1,140 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Recipe {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block body_class %} blog-author bg-gray-100 {% endblock body_class %}
+
+{% block content %}
+
+    {% include "includes/navigation-light.html" %}
+
+    <section class="py-sm-7 py-5 position-relative">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 mx-auto">
+                    <div class="row py-lg-7 py-5">
+                        <a href="{{ url_for('recipe_blueprint.index') }}" type="button" class="btn btn-link d-flex justify-content-start">
+                            See Other Recipes
+                        </a>
+                        <div class="col-lg-4 col-md-5 position-relative my-auto">
+                            <h3 class="mb-0">{{ recipe['title'] }}</h3>
+                            <div class="row mb-4 pt-2">
+                                <div class="col-auto">
+                                    <a type="button" class="like-toggle" data-recipe-id="{{ recipe['id'] }}" onclick="toggleLikes(this)">
+                                        <span class="h6">{{ recipe['like_count'] }}</span>
+                                        <span>Likes</span>
+                                    </a>
+                                </div>
+                                <div class="col-auto">
+                                    {% with recipe_id=recipe['id'], comments=recipe['comments'], comment_count=recipe['comments']|length %}
+                                        {% include "recipe/comment.html" %}
+                                    {% endwith %}                                
+                                </div>
+                            </div>
+                            <p class="text-lg mb-0">
+                                {{ recipe['description'] }}<br>
+                            </p>    
+                        </div>
+                        <div class="col-lg-7 col-md-7 pt-4" style="padding: 12px 200px;">
+                            <div class="align-items-center mb-2 pt-2" >
+                                <h3 class="mb-0">Preparation</h3>
+                            </div>
+                            <div class="align-items-center mb-2 pt-2">
+                                <h4 class="mb-0 text-start">Ingredients:</h4>
+                            </div>
+                            {% for ingredient in recipe['ingredients'] %}
+                                <div class="mb-2">
+                                    <span class="mb-0">{{ ingredient }}</span>
+                                </div>
+                            {% endfor %}
+                            <div class="align-items-center mb-2 pt-3">
+                                <h4 class="mb-0">Instructions:</h4>
+                            </div>
+                            <div class="mb-2">
+                                <span class="mb-0">{{ recipe['instructions'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script>
+    // Act on clicks to a elements
+    $("#comment-link").on('click', function(e) {
+        // prevent the default action, in this case the following of a link
+        e.preventDefault();
+        // capture the href attribute of the a element
+        var url = $(this).attr('href');
+        // perform a get request using ajax to the captured href value
+        $.get(url, function() {
+            // success
+        });
+    });
+
+    function toggleLikes(likeToggle) {
+        var recipeId = likeToggle.getAttribute("data-recipe-id");
+        var likeCount = likeToggle.querySelector(".h6");
+
+        // Send an AJAX POST request to like the recipe
+        fetch(`/recipes/${recipeId}/like`, {
+            method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                // Update the like count in the UI
+                var currentLikes = parseInt(likeCount.textContent);
+                if (likeToggle.classList.contains("liked")) {
+                    currentLikes--;
+                    likeToggle.classList.remove("liked");
+                } else {
+                    currentLikes++;
+                    likeToggle.classList.add("liked");
+                }
+                likeCount.textContent = currentLikes;
+            } else if (data.error && data.message === "You've already liked this recipe") {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error("An error occurred:", error);
+        });
+    }
+
+    function toggleComments(commentToggle) {
+        var commentSection = commentToggle.nextElementSibling;
+    
+        if (commentSection.style.display === "none") {
+            commentSection.style.display = "block";
+        } else {
+            commentSection.style.display = "none";
+        }
+        
+        // If the comment section is displayed, you can load comments here
+        if (commentSection.style.display === "block") {
+            loadComments(commentSection);
+        }
+    }
+
+    $('#exampleModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget) // Button that triggered the modal
+        var recipient = button.data('whatever') // Extract info from data-* attributes
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this)
+        modal.find('.modal-title').text('New message to ' + recipient)
+        modal.find('.modal-body input').val(recipient)
+      })
+    </script>
+
+{% endblock javascripts %}

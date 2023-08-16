@@ -1,0 +1,54 @@
+{% block content %}
+
+  <span class="h6">{{ comment_count }}</span>
+  <a type="button" class="like-toggle" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">
+    Comments
+  </a>
+  
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="row d-flex justify-content-center modal-dialog" role="document">
+      <div class="col-md-8 col-lg-6 modal-content">
+        <div class="card shadow-0">
+          <div class="card-body p-4">
+            <form method="post" action="{{ url_for('recipe_blueprint.comment_on_recipe', recipe_id=recipe_id) }}" class="form-outline mb-4">
+              <input type="text" class="form-control" name="comment_text" placeholder="Type comment..." required="required"/>
+              <button data-dismiss="modal" id="closeModalButton" type="button" class="close mt-2" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>      
+              <button type="submit" class="mt-2 btn btn-light btn-sm" id="exampleModalLabel">+ Add a note</button>
+            </form>
+
+            {% for comment in comments %}
+              <div class="card mb-4">
+                <div class="card-body">
+                  <p>Comment: {{ comment['comment_text'] }}</p>
+      
+                  <div class="d-flex justify-content-between">
+                    <div class="d-flex flex-row align-items-center">
+                      <p class="font-weight-bold">User: {{ comment['username'] }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+    
+            <div class="card">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+  <script>
+    $(document).ready(function() {
+        $('#closeModalButton').on('click', function() {
+            $('#exampleModal').modal('hide');
+        });
+    });
+  </script>
+{% endblock javascripts %}

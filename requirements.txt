@@ -1,4 +1,4 @@
-flask==2.0.2
+flask
 Werkzeug==2.0.3
 jinja2==3.0.2
 flask_login==0.5.0
@@ -12,6 +12,6 @@ gunicorn==20.1.0
 flask-restx==0.5.1
 python-dotenv==0.19.2
 Flask-Minify==0.37
-
-# flask_mysqldb
-# psycopg2-binary
+psycopg2-binary
+supabase
+pyjwt

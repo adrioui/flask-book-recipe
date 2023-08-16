@@ -1,0 +1,106 @@
+{% block content %}
+<div class="container">
+    <div class="col-lg-6">
+        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#exampleModalCenter">
+            Create a Recipe
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalCenterTitle">Create a Recipe</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-10 mx-auto">
+                            <div class="card mt-2 mx-auto p-4 bg-light">
+                                <div class="card-body bg-light">
+                                    <form role="form" method="post" action="{{ url_for('recipe_blueprint.create_recipe') }}"> 
+                                        <div class="controls">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="form_title">Title</label>
+                                                        <input type="text" name="title" class="form-control" placeholder="Please enter the title of your recipe" required="required" data-error="Title is required.">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="form_minutes">Minutes</label>
+                                                        <input type="text" name="minutes" class="form-control" placeholder="Please enter how long this recipe took time" required="required" data-error="Time is required.">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- ... Other form fields ... -->
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label>Ingredients</label>
+                                                        <div id="ingredient-fields">
+                                                            <input type="text" class="form-control mb-2" name="ingredient[]" placeholder="Add an ingredient" required>
+                                                        </div>
+                                                        <button type="button" id="add-ingredient" class="btn btn-secondary btn-sm">Add Ingredient</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="form_instruction">Instructions</label>
+                                                        <textarea id="form_instruction" name="instruction" class="form-control" placeholder="Describe the instructions required to make this recipe" rows="4" required="required" data-error="Please, include the instructions."></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="form_description">Description</label>
+                                                        <textarea id="form_description" name="description" class="form-control" placeholder="Describe your recipe" rows="4" required="required" data-error="Please, describe the recipe."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <input type="submit" class="btn btn-success btn-send pt-2 btn-block" value="Create a Recipe">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script>
+    // When the modal is shown, handleUpdate can be called to adjust the modal's position
+    $('#exampleModalCenter').on('shown.bs.modal', function () {
+        $(this).modal('handleUpdate');
+    });
+
+    // Add ingredient fields dynamically
+    $(document).ready(function() {
+        let ingredientCounter = 1;
+
+        $('#add-ingredient').click(function() {
+            const newField = `<input type="text" class="form-control mb-2" name="ingredient[]" placeholder="Add an ingredient" required>`;
+            $('#ingredient-fields').append(newField);
+            ingredientCounter++;
+        });
+    });
+  </script>
+
+{% endblock javascripts %}

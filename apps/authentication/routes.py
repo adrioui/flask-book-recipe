@@ -3,19 +3,23 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import render_template, redirect, request, url_for
-from flask_login import (
-    current_user,
-    login_user,
-    logout_user
-)
+import flask
+from flask import render_template, redirect, request, url_for, session
 
-from apps import db, login_manager
+from apps import db
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
 from apps.authentication.models import Users
 
-from apps.authentication.util import verify_pass
+from supabase import create_client, Client
+import os
+
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+
+url: str = SUPABASE_URL
+key: str = SUPABASE_KEY
+supabase: Client = create_client(url, key)
 
 
 @blueprint.route('/')
@@ -24,23 +28,25 @@ def route_default():
 
 
 # Login & Registration
-
 @blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if 'login' in request.form:
+
+    if flask.request.method == 'POST':
 
         # read form data
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
 
         # Locate user
-        user = Users.query.filter_by(username=username).first()
+        user = Users.query.filter_by(email=email).first()
 
         # Check the password
-        if user and verify_pass(password, user.password):
+        if user:
+            is_validated = supabase.auth.sign_in_with_password(
+                {"email": email, "password": password})
+            session["access_token"] = is_validated.session.access_token
 
-            login_user(user)
             return redirect(url_for('authentication_blueprint.route_default'))
 
         # Something (user or pass) is not ok
@@ -48,10 +54,11 @@ def login():
                                msg='Wrong user or password',
                                form=login_form)
 
-    if not current_user.is_authenticated:
+    if not session.get("access_token"):
         return render_template('accounts/login.html',
                                form=login_form)
-    return redirect(url_for('home_blueprint.index'))
+    else:
+        return redirect(url_for('recipe_blueprint.index'))
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -61,6 +68,7 @@ def register():
 
         username = request.form['username']
         email = request.form['email']
+        password = request.form['password']
 
         # Check usename exists
         user = Users.query.filter_by(username=username).first()
@@ -72,19 +80,30 @@ def register():
 
         # Check email exists
         user = Users.query.filter_by(email=email).first()
+
         if user:
             return render_template('accounts/register.html',
                                    msg='Email already registered',
                                    success=False,
                                    form=create_account_form)
 
-        # else we can create the user
-        user = Users(**request.form)
-        db.session.add(user)
-        db.session.commit()
+        response = supabase.auth.sign_up(
+            {'email': email, 'password': password})
+
+        if response:
+            # else we can create the user
+            user = Users(
+                email=email,
+                username=username
+            )
+            db.session.add(user)
+            db.session.commit()
+
+        # Delete user from session
+        session.clear()
 
         return render_template('accounts/register.html',
-                               msg='User created please <a href="/login">login</a>',
+                               msg='User created successfully.',
                                success=True,
                                form=create_account_form)
 
@@ -94,27 +113,8 @@ def register():
 
 @blueprint.route('/logout')
 def logout():
-    logout_user()
+    response = supabase.auth.sign_out()
+    if response is not None:
+        return {'message': 'Logout failed!'}
+    session.clear()
     return redirect(url_for('authentication_blueprint.login'))
-
-
-# Errors
-
-@login_manager.unauthorized_handler
-def unauthorized_handler():
-    return render_template('home/page-403.html'), 403
-
-
-@blueprint.errorhandler(403)
-def access_forbidden(error):
-    return render_template('home/page-403.html'), 403
-
-
-@blueprint.errorhandler(404)
-def not_found_error(error):
-    return render_template('home/page-404.html'), 404
-
-
-@blueprint.errorhandler(500)
-def internal_error(error):
-    return render_template('home/page-500.html'), 500
