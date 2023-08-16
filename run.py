@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
+from dotenv import load_dotenv
 from flask_migrate import Migrate
 from flask_minify import Minify
 from sys import exit
@@ -17,6 +18,7 @@ DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 # The configuration
 get_config_mode = 'Debug' if DEBUG else 'Production'
 
+load_dotenv()
 try:
 
     # Load the configuration using the default values
