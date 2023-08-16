@@ -1,6 +1,6 @@
 from functools import wraps
 import jwt
-from flask import request, redirect, request, url_for, session
+from flask import redirect, url_for, session
 from flask import current_app
 
 from .models import Users
@@ -24,11 +24,7 @@ def token_required(f):
                     "error": "Unauthorized"
                 }, 401
         except Exception as e:
-            return {
-                "message": "Something went wrong",
-                "data": None,
-                "error": str(e)
-            }, 500
+            return redirect(url_for('authentication_blueprint.route_default'))
 
         return f(current_user, *args, **kwargs)
 

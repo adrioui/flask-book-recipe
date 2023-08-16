@@ -33,6 +33,7 @@ def login():
     login_form = LoginForm(request.form)
 
     if flask.request.method == 'POST':
+        print("url: ", url)
 
         # read form data
         email = request.form['email']
