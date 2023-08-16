@@ -7,6 +7,8 @@ import os
 from flask_migrate import Migrate
 from flask_minify import Minify
 from sys import exit
+from waitress import serve
+
 
 from apps.config import config_dict
 from apps import create_app, db
@@ -39,4 +41,4 @@ if DEBUG:
 
 if __name__ == "__main__":
     # Use the port provided by Heroku
-    app.run(host="0.0.0.0", port=int(os.getenv('PORT')))
+    serve(app, host='0.0.0.0', port=int(os.getenv('PORT')))
