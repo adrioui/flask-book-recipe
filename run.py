@@ -51,4 +51,4 @@ def after_request(response):
 
 if __name__ == "__main__":
     # Use the port provided by Heroku
-    serve(app, host='0.0.0.0', port=int(os.getenv('PORT')))
+    serve(app, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
