@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
+from flask import g
 from flask_migrate import Migrate
 from flask_minify import Minify
 from sys import exit
@@ -38,6 +39,15 @@ if DEBUG:
     app.logger.info('Page Compression = ' + 'FALSE' if DEBUG else 'TRUE')
     app.logger.info('DBMS             = ' + app_config.SQLALCHEMY_DATABASE_URI)
     app.logger.info('ASSETS_ROOT      = ' + app_config.ASSETS_ROOT)
+
+
+@app.after_request
+def after_request(response):
+    if db is not None:
+        print('closing connection')
+        db.session.close()
+    return response
+
 
 if __name__ == "__main__":
     # Use the port provided by Heroku

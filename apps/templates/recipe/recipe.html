@@ -8,62 +8,60 @@
 {% block body_class %} blog-author bg-gray-100 {% endblock body_class %}
 
 {% block content %}
-
     {% include "includes/navigation-light.html" %}
 
     <section class="py-sm-7 py-5 position-relative">
         <div class="container">
+            <a href="{{ url_for('recipe_blueprint.index') }}" type="button" class="btn btn-link pl-0">
+                See Other Recipes
+            </a>    
             <div class="row">
-                <div class="col-12 mx-auto">
-                    <div class="row py-lg-7 py-5">
-                        <a href="{{ url_for('recipe_blueprint.index') }}" type="button" class="btn btn-link d-flex justify-content-start">
-                            See Other Recipes
+              <div class="col-5">
+                <h3 class="mb-3">{{ recipe['title'] }}</h3>
+                <div class="text-start"> <!-- Align image to the left -->
+                    <img src="{{ recipe['image_url'] }}" class="img-fluid rounded" alt="Recipe Image">
+                </div>
+                <div class="row mb-4 pt-2">
+                    <div class="col-auto">
+                        <a type="button" class="like-toggle" data-recipe-id="{{ recipe['id'] }}" onclick="toggleLikes(this)">
+                            <span class="h6">{{ recipe['like_count'] }}</span>
+                            <span>Likes</span>
                         </a>
-                        <div class="col-lg-4 col-md-5 position-relative my-auto">
-                            <h3 class="mb-0">{{ recipe['title'] }}</h3>
-                            <div class="row mb-4 pt-2">
-                                <div class="col-auto">
-                                    <a type="button" class="like-toggle" data-recipe-id="{{ recipe['id'] }}" onclick="toggleLikes(this)">
-                                        <span class="h6">{{ recipe['like_count'] }}</span>
-                                        <span>Likes</span>
-                                    </a>
-                                </div>
-                                <div class="col-auto">
-                                    {% with recipe_id=recipe['id'], comments=recipe['comments'], comment_count=recipe['comments']|length %}
-                                        {% include "recipe/comment.html" %}
-                                    {% endwith %}                                
-                                </div>
-                            </div>
-                            <p class="text-lg mb-0">
-                                {{ recipe['description'] }}<br>
-                            </p>    
-                        </div>
-                        <div class="col-lg-7 col-md-7 pt-4" style="padding: 12px 200px;">
-                            <div class="align-items-center mb-2 pt-2" >
-                                <h3 class="mb-0">Preparation</h3>
-                            </div>
-                            <div class="align-items-center mb-2 pt-2">
-                                <h4 class="mb-0 text-start">Ingredients:</h4>
-                            </div>
-                            {% for ingredient in recipe['ingredients'] %}
-                                <div class="mb-2">
-                                    <span class="mb-0">{{ ingredient }}</span>
-                                </div>
-                            {% endfor %}
-                            <div class="align-items-center mb-2 pt-3">
-                                <h4 class="mb-0">Instructions:</h4>
-                            </div>
-                            <div class="mb-2">
-                                <span class="mb-0">{{ recipe['instructions'] }}</span>
-                            </div>
-                        </div>
+                    </div>
+                    <div class="col-auto">
+                        {% with recipe_id=recipe['id'], comments=recipe['comments'], comment_count=recipe['comments']|length %}
+                            {% include "recipe/comment.html" %}
+                        {% endwith %}                                
                     </div>
                 </div>
+                <p class="text-lg mb-0">
+                    {{ recipe['description'] }}<br>
+                </p>
+              </div>
+              <div class="col ml-3">
+                <div class="align-items-center mb-2 pt-2" >
+                    <h3 class="mb-0">Preparation</h3>
+                </div>
+                <div class="align-items-center mb-2 pt-2">
+                    <h4 class="mb-0 text-start">Ingredients:</h4>
+                </div>
+                {% for ingredient in recipe['ingredients'] %}
+                    <div class="mb-2">
+                        <span class="mb-0">{{ ingredient }}</span>
+                    </div>
+                {% endfor %}
+                <div class="align-items-center mb-2 pt-3">
+                    <h4 class="mb-0">Instructions:</h4>
+                </div>
+                <div class="mb-2">
+                    <span class="mb-0">{{ recipe['instructions'] }}</span>
+                </div>
+              </div>
             </div>
         </div>
     </section>
-    
 {% endblock content %}
+
 
 <!-- Specific JS goes HERE --> 
 {% block javascripts %}
@@ -105,9 +103,6 @@
             } else if (data.error && data.message === "You've already liked this recipe") {
                 alert(data.message);
             }
-        })
-        .catch(error => {
-            console.error("An error occurred:", error);
         });
     }
 

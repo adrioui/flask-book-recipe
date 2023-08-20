@@ -6,6 +6,7 @@ Copyright (c) 2019 - present AppSeed.us
 import os
 import random
 import string
+from supabase import create_client, Client
 
 
 class Config(object):
@@ -31,6 +32,10 @@ class Config(object):
     DB_NAME = os.getenv('DB_NAME', None)
     USE_SQLITE = True
 
+    SUPABASE_URL = os.getenv('SUPABASE_URL')
+    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+    SUPABASE_STORAGE_URL = os.getenv('SUPABASE_STORAGE_URL')
+
     # try to set up a Relational DBMS
     if DB_ENGINE and DB_NAME and DB_USERNAME:
 
@@ -47,6 +52,10 @@ class Config(object):
             )
 
             USE_SQLITE = False
+
+            url: str = SUPABASE_URL
+            key: str = SUPABASE_KEY
+            supabase: Client = create_client(url, key)
 
         except Exception as e:
 

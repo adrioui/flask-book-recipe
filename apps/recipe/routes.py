@@ -1,26 +1,17 @@
 from flask import jsonify, request, render_template, url_for, redirect
+from tempfile import NamedTemporaryFile
+import os
 
-from apps.authentication.middleware import token_required
-
-from apps.recipe import blueprint
 from apps import db
-
+from apps.authentication.middleware import token_required
+from apps.recipe import blueprint
 from apps.authentication.models import Users
+from apps.config import Config
 
 from datetime import datetime
 
 from .models import Recipes, RecipeLikes, Comments, RecipeCategories, RecipeCategoryMapping
 from .forms import CommentForm, RecipeForm
-
-from supabase import create_client, Client
-import os
-
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-
-url: str = SUPABASE_URL
-key: str = SUPABASE_KEY
-supabase: Client = create_client(url, key)
 
 
 # RECIPES
@@ -61,29 +52,66 @@ def create_recipe(current_user):
             description = request.form.get('description')
             instruction = request.form.get('instruction')
             minutes = request.form.get('minutes')
+            category = request.form.get('category')
             ingredient = request.form.getlist('ingredient[]')
-            image_file = request.files.get('image')
+            image = request.files.get('image')
+
+            image_url = Config.SUPABASE_STORAGE_URL
+
+            if image:
+                # Save the image to a temporary file
+                with NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+                    image.save(temp_file)
+
+                # Upload the temporary file to Supabase Storage
+                temp_file_path = temp_file.name
+                # Adjust destination path as needed
+                destination = f"admin/{image.filename}"
+                image_url += f'/{image.filename}'
 
             new_recipe = Recipes(user_id=current_user.id,
                                  title=title,
                                  description=description,
+                                 image_url=image_url,
                                  ingredient=ingredient,
                                  instruction=instruction,
                                  minutes=minutes,
                                  created_at=datetime.now())
+
             db.session.add(new_recipe)
+            db.session.flush()
+
+            recipe_category = RecipeCategories.query.filter(
+                RecipeCategories.name == category).first()
+            recipe_id = new_recipe.id
+            recipe_category_id = recipe_category.id
+
+            if not recipe_category:
+                return jsonify({"message": "Category not found", "error": True}), 404
+
+            mapping = RecipeCategoryMapping(
+                recipe_id=recipe_id, category_id=recipe_category_id)
+
+            with open(temp_file_path, 'rb') as f:
+                Config.supabase.storage.from_(
+                    'recipes').upload(destination, f)
+
+            # Delete the temporary file
+            os.remove(temp_file_path)
+
+            db.session.add(mapping)
             db.session.commit()
 
             return redirect(url_for('recipe_blueprint.index'))
 
         except Exception as e:
+            db.session.rollback()
             return jsonify({"message": "Something went wrong", "error": str(e)}), 500
     else:
         return render_template('recipe/index.html', form=recipe_form)
 
+
 # Get a single recipe
-
-
 @blueprint.route('/recipes/<int:id>', methods=['GET'])
 def get_recipe(id):
     recipe = Recipes.query.get(id)
@@ -134,19 +162,19 @@ def get_recipe(id):
 
 # Give like and comment
 @blueprint.route('/recipes/<int:recipe_id>/like', methods=['POST'])
-# @token_required
-def like_recipe(recipe_id):
+@token_required
+def like_recipe(current_user, recipe_id):
     try:
         recipe = Recipes.query.get(recipe_id)
         if not recipe:
             return jsonify({"message": "Recipe not found", "error": True}), 404
 
         # Check if the user has already liked the recipe
-        if RecipeLikes.query.filter_by(user_id=1, recipe_id=recipe.id).first():
+        if RecipeLikes.query.filter_by(user_id=current_user.id, recipe_id=recipe.id).first():
             return jsonify({"message": "You've already liked this recipe", "error": True}), 400
 
         # Create a new RecipeLike entry
-        like = RecipeLikes(user_id=1, recipe_id=recipe.id)
+        like = RecipeLikes(user_id=current_user.id, recipe_id=recipe.id)
         db.session.add(like)
         db.session.commit()
 
@@ -285,6 +313,38 @@ def search_recipes():
         # Count likes and comments for the recipe
         like_count = RecipeLikes.query.filter_by(recipe_id=recipe.id).count()
 
+        comment_count = Comments.query.filter_by(recipe_id=recipe.id).count()
+
+        filtered_recipes.append({
+            'id': recipe.id,
+            'user_id': recipe.user_id,
+            'title': recipe.title,
+            'image_url': recipe.image_url,
+            'description': recipe.description,
+            'like_count': like_count,
+            'comment_count': comment_count
+        })
+
+    return render_template('recipe/index.html', recipes=filtered_recipes)
+
+
+@blueprint.route('/recipes/<category_name>', methods=['GET'])
+def filter_by_category(category_name):
+    # Get category by name
+    category = RecipeCategories.query.filter_by(name=category_name).first()
+    if not category:
+        return "Category not found", 404
+
+    # Get recipes associated with the given category
+    recipe_ids = [mapping.recipe_id for mapping in RecipeCategoryMapping.query.filter_by(
+        category_id=category.id).all()]
+
+    recipes = Recipes.query.filter(Recipes.id.in_(recipe_ids))
+
+    filtered_recipes = []
+    for recipe in recipes:
+        # Count likes and comments for the recipe
+        like_count = RecipeLikes.query.filter_by(recipe_id=recipe.id).count()
         comment_count = Comments.query.filter_by(recipe_id=recipe.id).count()
 
         filtered_recipes.append({

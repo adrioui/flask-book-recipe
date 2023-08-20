@@ -11,8 +11,10 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = session.get('access_token')
         if not token:
-            return redirect(url_for('authentication_blueprint.route_default'))
+            session.clear()
+            return redirect(url_for('authentication_blueprint.login'))
         try:
+            print("token: ", token)
             data = jwt.decode(
                 token, current_app.config["SECRET_KEY"], algorithms=["HS256"], audience="authenticated")
             current_user = Users.query.filter_by(email=data["email"]).first()
@@ -23,8 +25,12 @@ def token_required(f):
                     "data": None,
                     "error": "Unauthorized"
                 }, 401
+        except jwt.ExpiredSignatureError:
+            session.clear()
+            return redirect(url_for('authentication_blueprint.login'))
         except Exception as e:
-            return redirect(url_for('authentication_blueprint.route_default'))
+            session.clear()
+            return redirect(url_for('authentication_blueprint.login'))
 
         return f(current_user, *args, **kwargs)
 

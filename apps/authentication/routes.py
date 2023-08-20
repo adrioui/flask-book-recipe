@@ -10,16 +10,7 @@ from apps import db
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
 from apps.authentication.models import Users
-
-from supabase import create_client, Client
-import os
-
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-
-url: str = SUPABASE_URL
-key: str = SUPABASE_KEY
-supabase: Client = create_client(url, key)
+from apps.config import Config
 
 
 @blueprint.route('/')
@@ -33,7 +24,6 @@ def login():
     login_form = LoginForm(request.form)
 
     if flask.request.method == 'POST':
-        print("url: ", url)
 
         # read form data
         email = request.form['email']
@@ -44,16 +34,20 @@ def login():
 
         # Check the password
         if user:
-            is_validated = supabase.auth.sign_in_with_password(
-                {"email": email, "password": password})
-            session["access_token"] = is_validated.session.access_token
+            try:
+                is_validated = Config.supabase.auth.sign_in_with_password(
+                    {"email": email, "password": password})
 
-            return redirect(url_for('authentication_blueprint.route_default'))
+                session["access_token"] = is_validated.session.access_token
 
-        # Something (user or pass) is not ok
-        return render_template('accounts/login.html',
-                               msg='Wrong user or password',
-                               form=login_form)
+                return redirect(url_for('authentication_blueprint.route_default'))
+
+            except Exception as e:
+                # Handle the authentication error here
+                return render_template('accounts/login.html',
+                                       msg='Wrong email or password: ' +
+                                           str(e),
+                                       form=login_form)
 
     if not session.get("access_token"):
         return render_template('accounts/login.html',
@@ -88,7 +82,7 @@ def register():
                                    success=False,
                                    form=create_account_form)
 
-        response = supabase.auth.sign_up(
+        response = Config.supabase.auth.sign_up(
             {'email': email, 'password': password})
 
         if response:
@@ -114,7 +108,7 @@ def register():
 
 @blueprint.route('/logout')
 def logout():
-    response = supabase.auth.sign_out()
+    response = Config.supabase.auth.sign_out()
     if response is not None:
         return {'message': 'Logout failed!'}
     session.clear()

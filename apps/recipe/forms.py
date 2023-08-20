@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, FieldList
+from wtforms import StringField, FieldList, FileField
 from wtforms.validators import DataRequired
 
 
@@ -16,6 +16,10 @@ class RecipeForm(FlaskForm):
     description = StringField('Description',
                               id='description',
                               validators=[DataRequired()])
+    image = FileField('image', validators=[DataRequired()])
+    category = StringField('Category',
+                           id='category',
+                           validators=[DataRequired()])
     ingredients = FieldList(StringField(
         'Ingredient', validators=[DataRequired()]), min_entries=1)
     instruction = StringField('Instruction',
