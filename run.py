@@ -7,7 +7,6 @@ import os
 from flask_migrate import Migrate
 from flask_minify import Minify
 from sys import exit
-from waitress import serve
 
 
 from apps.config import config_dict

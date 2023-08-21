@@ -30,12 +30,11 @@ def configure_database(app):
         try:
             db.create_all()
         except Exception as e:
-
             print('> Error: DBMS Exception: ' + str(e))
 
             # fallback to SQLite
             basedir = os.path.abspath(os.path.dirname(__file__))
-            app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI = 'sqlite:///' + \
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
                 os.path.join(basedir, 'db.sqlite3')
 
             print('> Fallback to SQLite ')
