@@ -56,23 +56,23 @@ def create_recipe(current_user):
             ingredient = request.form.getlist('ingredient[]')
             image = request.files.get('image')
 
-            image_url = Config.SUPABASE_STORAGE_URL
+            # image_url = Config.SUPABASE_STORAGE_URL
 
-            if image:
-                # Save the image to a temporary file
-                with NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
-                    image.save(temp_file)
+            # if image:
+            #     # Save the image to a temporary file
+            #     with NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+            #         image.save(temp_file)
 
-                # Upload the temporary file to Supabase Storage
-                temp_file_path = temp_file.name
-                # Adjust destination path as needed
-                destination = f"admin/{image.filename}"
-                image_url += f'/{image.filename}'
+            #     # Upload the temporary file to Supabase Storage
+            #     temp_file_path = temp_file.name
+            #     # Adjust destination path as needed
+            #     destination = f"admin/{image.filename}"
+            #     image_url += f'/{image.filename}'
 
             new_recipe = Recipes(user_id=current_user.id,
                                  title=title,
                                  description=description,
-                                 image_url=image_url,
+                                 #  image_url=image_url,
                                  ingredient=ingredient,
                                  instruction=instruction,
                                  minutes=minutes,
@@ -92,12 +92,12 @@ def create_recipe(current_user):
             mapping = RecipeCategoryMapping(
                 recipe_id=recipe_id, category_id=recipe_category_id)
 
-            with open(temp_file_path, 'rb') as f:
-                Config.supabase.storage.from_(
-                    'recipes').upload(destination, f)
+            # with open(temp_file_path, 'rb') as f:
+            #     Config.supabase.storage.from_(
+            #         'recipes').upload(destination, f)
 
-            # Delete the temporary file
-            os.remove(temp_file_path)
+            # # Delete the temporary file
+            # os.remove(temp_file_path)
 
             db.session.add(mapping)
             db.session.commit()
