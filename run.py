@@ -4,7 +4,6 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
-from flask import g
 from flask_migrate import Migrate
 from flask_minify import Minify
 from sys import exit
@@ -49,6 +48,11 @@ def after_request(response):
     return response
 
 
+# retrieve port
+def get_port():
+    return int(os.environ.get("PORT", 5000))
+
+
 if __name__ == "__main__":
-    # Use the port provided by Heroku
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    serve(app, host='0.0.0.0', port=get_port(),
+          threads=2, url_prefix="/recipes")
