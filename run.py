@@ -54,5 +54,4 @@ def get_port():
 
 
 if __name__ == "__main__":
-    serve(app, host='0.0.0.0', port=get_port(),
-          threads=2, url_prefix="/recipes")
+    app.run(debug=False, port=get_port(), host='0.0.0.0')
